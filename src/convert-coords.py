@@ -1,4 +1,4 @@
-import json, os, subprocess
+import argparse, json, os, subprocess
 from PIL import Image
 from pyproj import Proj
 
@@ -9,25 +9,31 @@ class Converter:
   def fromUtm(self, r, t):
     return self.proj(r, t, inverse=True)
 
-def run():
-  os.makedirs('pngs', exist_ok=True)
+def convert(args):
+  tileType = args['type']
+  if args['name'] is None:
+    args['name'] = tileType
+  outDir = os.path.join(args['output_dir'], tileType)
+  os.makedirs(outDir, exist_ok=True)
   utm = Converter()
   xtiles = dict()
   ytiles = dict()
   tiles = dict()
-  for d in os.listdir():
+  for d in os.listdir(args['input_dir']):
     if not os.path.isdir(d): continue
     for fileName in os.listdir(d):
       parts = fileName.split('_')
       if len(parts) != 4: continue
       tx, ty = parts[1:3]
-      if parts[-1] != 'col.tif': continue
+      tile, ext = parts[3].split('.')
+      if ext != 'tif': continue
+      if tile != tileType: continue
       key = '_'.join(parts[1:3])
       tgtName = key+'.png'
-      tgtPath = os.path.join('pngs', tgtName)
+      tgtPath = os.path.join(outDir, tgtName)
       print(os.path.join(d, fileName), tgtPath)
-      #subprocess.run(['convert', os.path.join(d, fileName), tgtPath])
-      dataFile = '_'.join(parts[:-1])+'_col.tfw'
+      subprocess.run(['convert', os.path.join(d, fileName), tgtPath])
+      dataFile = '_'.join(parts[:-1])+'_'+tileType+'.tfw'
       #print(dataFile)
       im = Image.open(os.path.join(d, fileName))
       w, h = im.size
@@ -71,6 +77,7 @@ def run():
   for y in sorted(ytiles):
     ylist.append(ytiles[y])
   res = {
+    'name': args['name'],
     'xtiles': xlist,
     'ytiles': ylist,
     'tiles': tiles,
@@ -78,6 +85,20 @@ def run():
   with open(os.path.join('pngs', 'coords.json'), 'w') as fo:
     json.dump(res, fo, indent=2)
 
+def run():
+  parser = argparse.ArgumentParser(
+    description='Extract and convert DTK map tiles')
+  parser.add_argument('--output_dir', '-o',
+    help='base output dir (type is appended)', default=".")
+  parser.add_argument('--input_dir', '-i',
+    help='base input dir', default=".")
+  parser.add_argument('--type', '-t',
+    help='Tile type (part of filename: col, bcgr, grbr, ...)', default='col')
+  parser.add_argument('--name', '-n',
+    help='Map name')
+  args = parser.parse_args()
+  print(vars(args))
+  convert(vars(args))
 if __name__ == '__main__':
   run()
 
