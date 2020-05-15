@@ -82,7 +82,7 @@ def convert(args):
     'ytiles': ylist,
     'tiles': tiles,
   }
-  with open(os.path.join('pngs', 'coords.json'), 'w') as fo:
+  with open(os.path.join(outDir, 'coords.json'), 'w') as fo:
     json.dump(res, fo, indent=2)
 
 def run():

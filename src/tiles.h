@@ -44,6 +44,7 @@ public:
 
 class Tiles {
 private:
+    QString myTileDir;
     QList<TilePos> myXtiles;
     QList<TilePos> myYtiles;
     QMap<QString, Tile> myTiles;
@@ -51,6 +52,8 @@ private:
 public:
     Tiles();
 public:
+    QString tileDir() const { return myTileDir; }
+    void setTileDir(const QString& tileDir) { myTileDir = tileDir; }
     void addXTile(const QString& key, const QPointF& utm, const QPointF& wgs) {
         myXtiles.append(TilePos(TILE_X, key, utm, wgs));
     }
@@ -60,6 +63,11 @@ public:
     void addTile(const QString& key, const QPointF& utm0, const QPointF& utm1, const QPointF& wgs0,
                  const QPointF& wgs1) {
         myTiles.insert(key, Tile(utm0, utm1, wgs0, wgs1));
+    }
+    void clear() {
+        myXtiles.clear();
+        myYtiles.clear();
+        myTiles.clear();
     }
     TilePos xTile(int idx) const;
     TilePos yTile(int idx) const;

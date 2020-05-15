@@ -67,6 +67,7 @@ void MainWindow::createMenuBar() {
 void MainWindow::loadData() {
 
     QString fileName = mySettings->value("mapsettings", "coords.json").toString();
+    QDir tileDir = QFileInfo(fileName).absoluteDir();
     QFile file(fileName);
     if (!file.open(QFile::ReadOnly)) {
         qWarning("Could not open file $1");
@@ -75,6 +76,8 @@ void MainWindow::loadData() {
     QByteArray data = file.readAll();
     QJsonDocument json = QJsonDocument::fromJson(data);
     qDebug()<<json["xtiles"];
+    myTiles.setTileDir(tileDir.absolutePath());
+    myTiles.clear();
     for (const QJsonValueRef& jTileRef: json["xtiles"].toArray()) {
         QJsonObject jTile = jTileRef.toObject();
         QString x = jTile["x"].toString();
@@ -203,7 +206,7 @@ void MainWindow::print() {
     double scYm2 = scYm + 0.4*pr1cm;
     painter.setClipRect(0, 0, printer.pageRect().width(), printer.pageRect().height());
     QPen pen(Qt::black);
-    pen.setWidth(0.035*pr1cm);
+    pen.setWidth(0.025*pr1cm);
     painter.setPen(pen);
     for (int i = 0; i*prKmDist <= printer.pageRect().width(); i++) {
         painter.setBrush(QBrush(Qt::white));

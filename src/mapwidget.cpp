@@ -36,7 +36,7 @@ void MapWidget::paintEvent(QPaintEvent *event) {
         for (int ty = ty1; ty >= ty0; ty--, y+=myScale) {
             QString keyX = myTiles->keyX(tx);
             QString keyY = myTiles->keyY(ty);
-            QString fileName = QString("/data/dtk-sachsen/DTK25/pngs/%1_%2.png").arg(keyX).arg(keyY);
+            QString fileName = QDir(myTiles->tileDir()).absoluteFilePath(QString("%1_%2.png").arg(keyX).arg(keyY));
             //qDebug()<<fileName;
             QPixmap pixmap(fileName);
             if (pixmap.isNull()) continue;
