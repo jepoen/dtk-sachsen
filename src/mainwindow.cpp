@@ -10,9 +10,9 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
     mySettings = new QSettings("knipling", "dtk-sachsen");
+    loadData();
     createActions();
     createMenuBar();
-    loadData();
     createMapWidget();
     myScroll = new QScrollArea();
     QWidget *mainWidget = new QWidget();
@@ -23,11 +23,10 @@ MainWindow::MainWindow(QWidget *parent)
     myScaleWidget = new ScaleWidget();
     mainLayout->addWidget(myScaleWidget);
     setCentralWidget(mainWidget);
-    scale400Action->setChecked(true);
-    setScale(400);
-    myScroll->horizontalScrollBar()->setValue(myMapWidget->width()/2);
-    myScroll->verticalScrollBar()->setValue(myMapWidget->height()/2);
     resize(1200, 800);
+    createMap(0);
+    scale400Action->setChecked(true);
+    QTimer::singleShot(0, this, &MainWindow::scroll);
 }
 
 MainWindow::~MainWindow()
@@ -65,8 +64,20 @@ void MainWindow::createMenuBar() {
 }
 
 void MainWindow::loadData() {
+    qDebug()<<"read maps";
+    int size = mySettings->beginReadArray("maps");
+    for (int i = 0; i < size; i++) {
+        mySettings->setArrayIndex(i);
+        QString fileName = mySettings->value("mapsettings", "coords.json").toString();
+        qDebug()<<"map"<<i<<fileName;
+        myMaps.append(fileName);
+    }
+    mySettings->endArray();
+}
 
-    QString fileName = mySettings->value("mapsettings", "coords.json").toString();
+void MainWindow::createMap(int idx) {
+    if (idx >= myMaps.size()) return;
+    QString fileName = myMaps.at(idx);
     QDir tileDir = QFileInfo(fileName).absoluteDir();
     QFile file(fileName);
     if (!file.open(QFile::ReadOnly)) {
@@ -107,6 +118,14 @@ void MainWindow::loadData() {
         QPointF wgs1(jwgs[1].toArray()[0].toDouble(), jwgs[1].toArray()[1].toDouble());
         myTiles.addTile(it.key(), utm0, utm1, wgs0, wgs1);
     }
+    myMapWidget->setTiles(&myTiles);
+    QTimer::singleShot(0, this, &MainWindow::scroll);
+}
+
+void MainWindow::scroll() {
+    myScroll->horizontalScrollBar()->setValue(myMapWidget->width()/2);
+    myScroll->verticalScrollBar()->setValue(myMapWidget->height()/2);
+    setScale(400);
 }
 
 void MainWindow::createMapWidget() {
@@ -227,9 +246,12 @@ void MainWindow::print() {
 void MainWindow::settings() {
     QString fileName = QFileDialog::getOpenFileName(this, tr("Map config file"), ".", "coords.json");
     if (fileName.isEmpty()) return;
-    mySettings->setValue("mapsettings", fileName);
-    loadData();
-    myMapWidget->setTiles(&myTiles);
-    myScroll->horizontalScrollBar()->setValue(myMapWidget->width()/2);
-    myScroll->verticalScrollBar()->setValue(myMapWidget->height()/2);
+    myMaps.append(fileName);
+    mySettings->beginWriteArray("maps", myMaps.size());
+    for (int i = 0; i < myMaps.size(); i++) {
+        mySettings->setArrayIndex(i);
+        mySettings->setValue("mapsettings", fileName);
+    }
+    mySettings->endArray();
+    createMap(myMaps.size()-1);
 }

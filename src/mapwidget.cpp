@@ -58,6 +58,7 @@ void MapWidget::setScale(int scale) {
     if (width == 0 || height == 0) {
         height = width = myScale;
     }
+    resize(width, height);
     setGeometry(0, 0, width, height);
     repaint();
 }

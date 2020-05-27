@@ -3,6 +3,8 @@
 
 #include <QMainWindow>
 #include <QJsonDocument>
+#include <QList>
+#include <QString>
 
 #include "tiles.h"
 
@@ -22,6 +24,7 @@ private:
     QScrollArea *myScroll;
     MapWidget *myMapWidget;
     ScaleWidget *myScaleWidget;
+    QList<QString> myMaps;
 
     QAction *scale400Action;
     QAction *scale200Action;
@@ -33,6 +36,7 @@ private:
     void createMenuBar();
     void loadData();
     void createMapWidget();
+    void createMap(int idx);
     void settings();
 
 
@@ -45,6 +49,7 @@ private slots:
     void scale200() { setScale(200); }
     void scale100() { setScale(100); }
     void print();
+    void scroll();
 };
 
 #endif // MAINWINDOW_H
